@@ -120,7 +120,8 @@ public class DBServerImp implements DBServer {
         }
         List<Map<String,Object>> testSqlList = new TestSqlDataImp().getTestSqlDataFromCsv(csvPath);
         for(Map<String,Object> testSqlMap: testSqlList){
-            String sqlStr = "";
+            StringBuffer sb = new StringBuffer();
+            sb.append("delete from " + tableName + " where ");
             for (Map.Entry<String, Object> entry: testSqlMap.entrySet()){
                 String field = entry.getKey();
                 if (excludeColumn != null && excludeColumn.contains(field)){
@@ -128,11 +129,10 @@ public class DBServerImp implements DBServer {
                 } else if (entry.getValue().toString().indexOf("()") > 0){
                     continue;
                 }
-                sqlStr += field + "='" + entry.getValue() +"' and ";
+                sb.append(field + "='" + entry.getValue() +"' and ");
             }
-            sqlStr = sqlStr.substring(0,sqlStr.length()-4);
-            String sql = "delete from " + tableName + " where " + sqlStr;
-            deleteSql(dbKey,sql);
+            sb.delete(sb.lastIndexOf("and"),sb.length());
+            deleteSql(dbKey,sb.toString());
         }
         return true;
     }
@@ -237,11 +237,12 @@ public class DBServerImp implements DBServer {
     }
 
     private String getInsertSql(List<String[]> fieldMetaData,Map<String,Object> sqlMap, String tableName){
-        String nameStr = "";
-        String valueStr = "";
+        StringBuffer sqlSB = new StringBuffer();
+        StringBuffer nameSB = new StringBuffer();
+        StringBuffer valueSB = new StringBuffer();
         for (String[] fieldMeta: fieldMetaData){
             String field = fieldMeta[0];
-            nameStr += field + ", ";
+            nameSB.append(field + ", ");
             if (sqlMap.containsKey(field)){
                 String temp = sqlMap.get(field).toString().trim();
                 if (temp.trim().isEmpty()){
@@ -252,20 +253,24 @@ public class DBServerImp implements DBServer {
                     if(!temp.endsWith("'"))
                         temp = temp + "'";
                 }
-                valueStr += temp + ", ";    //支持函数
+                valueSB.append(temp + ", ");    //支持函数
             }else {
                 //  默认值为null时设置空
                 if ("null".equalsIgnoreCase(fieldMeta[1])){
-                    valueStr += "'', ";
+                    valueSB.append("'', ");
                 }else {
-                    valueStr += "'" + fieldMeta[1] + "', ";
+                    valueSB.append("'" + fieldMeta[1] + "', ");
                 }
             }
         }
-        nameStr = nameStr.substring(0, nameStr.length() - 2);
-        valueStr = valueStr.substring(0, valueStr.length() - 2);
-        String sql = "INSERT  INTO " + tableName + " (" + nameStr + ")" + " VALUES " + "(" + valueStr + ")";
-        return sql;
+        nameSB.delete(nameSB.lastIndexOf(","),nameSB.length());
+        valueSB.delete(valueSB.lastIndexOf(","),valueSB.length());
+        sqlSB.append("INSERT  INTO " + tableName + " (");
+        sqlSB.append(nameSB);
+        sqlSB.append(") VALUES (");
+        sqlSB.append(valueSB);
+        sqlSB.append(")");
+        return sqlSB.toString();
     }
 
     /**

@@ -95,10 +95,7 @@ public class HttpServiceImp implements HttpService {
             //创建HttpClient对象，HttpClients.createDefault()
             CloseableHttpClient httpClient = HttpClients.createDefault();
             //构建url中的请求参数
-            if (params != null && !params.isEmpty()){
-                String urlParams = toHttpGetParams(params);
-                url = url + "?" + urlParams;
-            }
+            url = url + toHttpGetParams(params);
             //基于要发送的HTTP请求类型创建HttpGet或者HttpPost实例
             httpGet = new HttpGet(url);
             //get请求，添加header
@@ -141,7 +138,7 @@ public class HttpServiceImp implements HttpService {
         //  设置头部信息
         if (header != null && !header.isEmpty()) {
             for (Map.Entry<String, String> entry : header.entrySet()) {
-                httpRequestBase.addHeader(entry.getKey(), entry.getValue());
+                httpRequestBase.addHeader(entry.getKey().trim(), entry.getValue().trim());
             }
         }
         //  设置连接超时信息
@@ -152,12 +149,17 @@ public class HttpServiceImp implements HttpService {
      * 这里只是其中的一种场景,也就是把参数用&符号进行连接且进行URL编码
      * 根据实际情况拼接参数
      */
-    private String toHttpGetParams(Map<String, String> urlParams) throws Exception {
-        String res = "";
-        for (Map.Entry<String, String> entry : urlParams.entrySet()) {
-            res += entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), "utf-8") + "&";
+    public String toHttpGetParams(Map<String, String> urlParams) throws Exception {
+        if (urlParams == null || urlParams.isEmpty()) {
+            return "";
         }
-        return "".equals(res) ? "" : StringUtils.chop(res);
+        StringBuffer stringBuffer = new StringBuffer();
+        stringBuffer.append("?");
+        for (Map.Entry<String, String> entry : urlParams.entrySet()) {
+            stringBuffer.append(entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), "utf-8") + "&");
+        }
+        stringBuffer.delete(stringBuffer.lastIndexOf("&"),stringBuffer.length());
+        return stringBuffer.toString();
     }
 
     /**
