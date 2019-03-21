@@ -1,0 +1,12 @@
+caseid,description,entityId,selfEntityId,infoId,lastVer,opUserId,opUserName,result,message,dbAssert
+1,无效的总部entity_id,00000000,00000000,testpurchase1eba0165c72b675c0005,0,0,test,,,
+2,无效的门店self_entity_id,99228524,00000000,testpurchase1eba0165c72b675c0005,0,0,test,,,
+3,采购单infoId为空,99228524,99228524,,0,0,test,,,
+4,采购单infoId为null,99228524,99228524,null,0,0,test,,,
+5,采购单infoId已被删除,99228524,99228524,testpurchase1eba0165c72b675c0004,0,0,test,,,
+6,采购单状态为待审核,99228524,99228524,testpurchase1eba0165c72b675c0006,0,0,test,,,true
+7,采购单状态为待支付,99228524,99228524,testpurchase1eba0165c72b675c0007,0,0,test,,,true
+8,采购单状态为已处理,99228524,99228524,testpurchase1eba0165c72b675c0008,0,0,test,,,true
+9,采购单状态为已拒绝,99228524,99228524,testpurchase1eba0165c72b675c0009,0,0,test,,,true
+10,采购单状态为待处理,99228524,99228524,testpurchase1eba0165c72b675c0010,0,0,test,,,true
+11,采购单lastVer为null,99228524,99228524,testpurchase1eba0165c72b675c0005,null,0,test,,,true

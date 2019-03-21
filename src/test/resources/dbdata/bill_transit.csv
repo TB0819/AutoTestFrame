@@ -1,0 +1,7 @@
+"id","entity_id","self_entity_id","goods_id","transit_total_num","bill_type","is_valid","create_time","create_user_id","op_time","last_ver","op_user_id","op_user_name","extend_fields"
+testpurchase9eba0165c72b60003001,99228524,99228524,9922852468df9be70169234b9cc86370,0.500000,1,"1","DATE_FORMAT(now(),'%Y%m%d%H%i%s999')",0,"DATE_FORMAT(now(),'%Y%m%d%H%i%s999')","0",0,test,""
+testpurchase9eba0165c72b60003002,99228526,99228526,9922852668df9be70169237fc0ea68d7,0.500000,1,"1","DATE_FORMAT(now(),'%Y%m%d%H%i%s999')",0,"DATE_FORMAT(now(),'%Y%m%d%H%i%s999')","0",0,test,""
+testpurchase9eba0165c72b60003003,99228524,99228525,9922852568df9be701692383d4026f1e,0.500000,1,"1","DATE_FORMAT(now(),'%Y%m%d%H%i%s999')",0,"DATE_FORMAT(now(),'%Y%m%d%H%i%s999')","0",0,test,""
+testpurchase9eba0165c72b60003004,99228524,99228524,9922852468df9be70169234b9ea06379,0.500000,1,"1","DATE_FORMAT(now(),'%Y%m%d%H%i%s999')",0,"DATE_FORMAT(now(),'%Y%m%d%H%i%s999')","0",0,test,""
+testpurchase9eba0165c72b60003005,99228524,99228524,9922852468df9be70169234b9df86373,0.500000,1,"1","DATE_FORMAT(now(),'%Y%m%d%H%i%s999')",0,"DATE_FORMAT(now(),'%Y%m%d%H%i%s999')","0",0,test,""
+testpurchase9eba0165c72b60003006,99228524,99228524,9922852468df9be70169234b9e5a6376,0.500000,1,"1","DATE_FORMAT(now(),'%Y%m%d%H%i%s999')",0,"DATE_FORMAT(now(),'%Y%m%d%H%i%s999')","0",0,test,""
