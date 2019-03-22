@@ -76,7 +76,7 @@ public class AutoTestData {
             caseSourceMap.put("count",caseSource.count());
             return caseSourceMap;
         }
-        throw new Exception(Constants.Exception.ANNOTATIONS_ERROR);
+        throw new Exception(Constants.ExceptionMessage.ANNOTATIONS_ERROR);
     }
 
     /**

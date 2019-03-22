@@ -50,7 +50,7 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
             String[] paths = testContextConfiguration.locations();
             for (String path: paths) {
                 if (!path.endsWith(".properties")){
-                    throw new Exception(Constants.Exception.CONFIG_FILE_TYPE_ERROR + path);
+                    throw new Exception(Constants.ExceptionMessage.CONFIG_FILE_TYPE_ERROR + path);
                 }
                 File configFile;
                 if (path.startsWith("classpath:")) {
@@ -102,7 +102,7 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
         String filePath = CommonUtil.getCurrentTestResourcePath((short) 1) + fileName;
         File file = new File(filePath.substring(1));
         if (!file.exists()){
-            throw new Exception(String.format(Constants.Exception.CONFIG_FILE_EXIST_ERROR, file.getAbsolutePath()));
+            throw new Exception(String.format(Constants.ExceptionMessage.CONFIG_FILE_EXIST_ERROR, file.getAbsolutePath()));
         }
         return file;
     }

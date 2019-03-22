@@ -90,7 +90,7 @@ public class DBServerImp implements DBServer {
     @Override
     public boolean insertFromFile(String dbKey, String csvPath, String tableName) throws Exception {
         if (StringUtils.isBlank(csvPath) || StringUtils.isBlank(tableName)) {
-            logger.error(Constants.Exception.SQL_FILE_ERROR);
+            logger.error(Constants.ExceptionMessage.SQL_FILE_ERROR);
             return false;
         }
         List<String> sqlList = getInsertSqlList(dbKey,csvPath,tableName);
@@ -98,7 +98,7 @@ public class DBServerImp implements DBServer {
         for (String insertSQL : sqlList) {
             Integer result = insertSql(dbKey,insertSQL);
             if(result < 0){
-                throw new Exception(Constants.Exception.SQL_ERROR + insertSQL);
+                throw new Exception(Constants.ExceptionMessage.SQL_ERROR + insertSQL);
             }
         }
         return true;
@@ -115,7 +115,7 @@ public class DBServerImp implements DBServer {
     @Override
     public boolean deleteFromFile(String dbKey, String csvPath, String tableName,List<String> excludeColumn) throws Exception {
         if (StringUtils.isBlank(csvPath) || StringUtils.isBlank(tableName)) {
-            logger.error(Constants.Exception.SQL_FILE_ERROR);
+            logger.error(Constants.ExceptionMessage.SQL_FILE_ERROR);
             return false;
         }
         List<Map<String,Object>> testSqlList = new TestSqlDataImp().getTestSqlDataFromCsv(csvPath);
@@ -209,8 +209,8 @@ public class DBServerImp implements DBServer {
         String[] strArray = sqlStr.toLowerCase().split("where");
 
         if(strArray.length < 2 || strArray[1].trim().isEmpty()){
-            logger.error(String.format(Constants.Exception.SQL_NO_WHERE,sqlStr));
-            throw new Exception(String.format(Constants.Exception.SQL_NO_WHERE,sqlStr));
+            logger.error(String.format(Constants.ExceptionMessage.SQL_NO_WHERE,sqlStr));
+            throw new Exception(String.format(Constants.ExceptionMessage.SQL_NO_WHERE,sqlStr));
         }
         return  true;
     }

@@ -72,7 +72,7 @@ public class ExcelTestCaseData extends TestCaseData{
     private Boolean getExcelType(String filePath) throws Exception{
     	String[] strs = filePath.split("\\.");
     	if(null == strs || strs.length < 2){
-    		throw new Exception(Constants.Exception.FILE_PATH_ERROR);
+    		throw new Exception(Constants.ExceptionMessage.FILE_PATH_ERROR);
     	}
     	if(strs[1].equals("xlsx")){
     		return false;
