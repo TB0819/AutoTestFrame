@@ -1,20 +1,19 @@
 package com.frame.listeners;
 
 import com.frame.annotations.CaseSource;
-import com.frame.annotations.ReadyData;
 import com.frame.annotations.ReadyTestData;
 import com.frame.config.AbstractTestBase;
-import com.frame.server.DBServer;
-import com.frame.server.imp.DBServerImp;
-import org.apache.commons.lang3.StringUtils;
+import com.frame.config.Constants;
+import com.frame.util.CommonUtil;
 import org.testng.*;
+import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ITestListenerHandler implements ITestListener, IInvokedMethodListener {
-    private String currentMethodPath = "";
+    private Map<Long, String> currentMethodMap = new HashMap<>();
 
     @Override
     public void beforeInvocation(IInvokedMethod iInvokedMethod, ITestResult testResult) {
@@ -24,38 +23,52 @@ public class ITestListenerHandler implements ITestListener, IInvokedMethodListen
     @Override
     public void afterInvocation(IInvokedMethod iInvokedMethod, ITestResult iTestResult) {
         Method method = iInvokedMethod.getTestMethod().getConstructorOrMethod().getMethod();
+        Class currentTestClass = iTestResult.getTestClass().getRealClass();
         boolean flag = false;
+        Test testAnnotation = method.getAnnotation(Test.class);
+        ReadyTestData readyTestData = method.getAnnotation(ReadyTestData.class);
         try {
             if (method.isAnnotationPresent(CaseSource.class)) {
                 CaseSource caseSource = method.getAnnotation(CaseSource.class);
                 int caseCount = caseSource.count();
                 int currentCount = iTestResult.getMethod().getCurrentInvocationCount();
-                if (currentCount == caseCount || caseCount == -1){
-                    AbstractTestBase.currentTestReadyDBData.clear();
+                int testInvocationCount = testAnnotation.invocationCount();
+                if (currentCount == (caseCount * testInvocationCount) || caseCount == -1){
+                    AbstractTestBase.clearThreadTestReadyDbData(currentTestClass.getCanonicalName(),readyTestData);
                     flag = true;
-                    deleteDbData(method);
+                    CommonUtil.executeReadyTestDbData(Constants.METHOD_ANNOTATION,Constants.DEL_DATA,currentTestClass,method);
+                }
+            }else {
+                if (method.isAnnotationPresent(ReadyTestData.class)){
+                    flag = true;
+                    CommonUtil.executeReadyTestDbData(Constants.METHOD_ANNOTATION,Constants.DEL_DATA,currentTestClass,method);
                 }
             }
         }catch (Exception e){
             Assert.fail("准备数据清理失败",e);
         }finally {
-            if (flag && !AbstractTestBase.currentTestReadyDBData.isEmpty()){
-                AbstractTestBase.currentTestReadyDBData.clear();
+            if (flag && !AbstractTestBase.DbReadyData.get(currentTestClass.getCanonicalName()).isEmpty()){
+                AbstractTestBase.clearThreadTestReadyDbData(currentTestClass.getCanonicalName(),readyTestData);
             }
         }
     }
 
     @Override
     public void onTestStart(ITestResult iTestResult) {
-        Method method = iTestResult.getMethod().getConstructorOrMethod().getMethod();
-        String methodPath = iTestResult.getMethod().getQualifiedName();
+        Class currentTestClass = iTestResult.getTestClass().getRealClass();
+        Method currentTestMethod = iTestResult.getMethod().getConstructorOrMethod().getMethod();
+        String currentTestMethodPath = iTestResult.getMethod().getQualifiedName();
+        long threadId = Thread.currentThread().getId();
         try {
-            //  DataProvider模式只执行一次
-            if (currentMethodPath.equals(methodPath)){
+            //并发测试根据线程区分 DataProvider模式只执行一次
+            if (currentTestMethodPath.equals(currentMethodMap.get(threadId))){
                 return;
             }
-            currentMethodPath = methodPath;
-            insertDbData(method);
+            currentMethodMap.put(threadId,currentTestMethodPath);
+            //测试方法上注解执行插入准备数据
+            if (currentTestMethod != null) {
+                CommonUtil.executeReadyTestDbData(Constants.METHOD_ANNOTATION, Constants.INSERT_DATA, currentTestClass, currentTestMethod);
+            }
         } catch (Exception e) {
             Assert.fail("数据准备初始化失败",e);
         }
@@ -89,55 +102,5 @@ public class ITestListenerHandler implements ITestListener, IInvokedMethodListen
     @Override
     public void onFinish(ITestContext context) {
 
-    }
-
-    /**
-     * 测试执行前插入准备的DB数据
-     * @param method
-     */
-    private void insertDbData(Method method) throws Exception {
-        if (method.isAnnotationPresent(ReadyTestData.class)){
-            ReadyData[] readyData = method.getAnnotation(ReadyTestData.class).datas();
-            String temp = "";
-            for (ReadyData dbData: readyData){
-                String dbKey = dbData.dbName();
-                String tableName = dbData.tableName();
-                String filePath = dbData.path();
-                checkDbData(method, filePath);
-                DBServer dbServer = new DBServerImp();
-                dbServer.insertFromFile(dbKey,filePath,tableName);
-                Map<String, List<Map<String,Object>>> currentTableData = ((DBServerImp) dbServer).getCurrentTableDataList();
-                //  相同数据库时则putAll表数据，否则put数据库
-                if (temp.equals(dbKey)) {
-                    AbstractTestBase.currentTestReadyDBData.get(dbKey).putAll(currentTableData);
-                } else {
-                    AbstractTestBase.currentTestReadyDBData.put(dbKey,currentTableData);
-                    temp = dbKey;
-                }
-            }
-        }
-    }
-
-    /**
-     * 测试执行后清理准备的DB数据
-     * @param method
-     */
-    private void deleteDbData(Method method) throws Exception {
-        if (method.isAnnotationPresent(ReadyTestData.class)){
-            ReadyData[] readyData = method.getAnnotation(ReadyTestData.class).datas();
-            for (ReadyData dbData: readyData){
-                String dbKey = dbData.dbName();
-                String tableName = dbData.tableName();
-                String filePath = dbData.path();
-                DBServer dbServer = new DBServerImp();
-                dbServer.deleteFromFile(dbKey,filePath,tableName,null);
-            }
-        }
-    }
-
-    private void checkDbData(Method method, String filePath){
-        if (StringUtils.isBlank(filePath)){
-            Assert.fail(method.getName() + " -测试准备数据文件路径为空!");
-        }
     }
 }

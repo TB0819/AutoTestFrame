@@ -202,6 +202,17 @@ public class DBServerImp implements DBServer {
     }
 
     /**
+     * 返回数据库连接
+     * @param dbKey 数据库Key
+     * @return
+     * @throws SQLException
+     */
+    @Override
+    public DruidPooledConnection getDruidConnection(String dbKey) throws SQLException {
+        return dbPoolConnection.getConnection(dbKey);
+    }
+
+    /**
      * delete 语句以及 update 语句需要检查 where 字段, 避免对全表进行操作<br/>
      * @return
      */
@@ -315,8 +326,8 @@ public class DBServerImp implements DBServer {
             connection = dbPoolConnection.getConnection(dbKey);
             ps = connection.prepareStatement(sql);
             logger.info("执行SQL：" + sql);
-            Integer result = ps.executeUpdate();
-            return result;
+//            Integer result = ps.executeUpdate();
+//            return result;
         }catch (SQLException e){
             logger.error("unexpect SQLException:", e);
         }finally {

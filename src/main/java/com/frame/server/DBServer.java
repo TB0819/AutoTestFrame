@@ -1,5 +1,8 @@
 package com.frame.server;
 
+import com.alibaba.druid.pool.DruidPooledConnection;
+
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -19,5 +22,7 @@ public interface DBServer {
     public List<String[]>  getFieldMetaData(String dbKey, String tableName) throws Exception;
 
     public Map<String,Object>  getFieldDefaultMetaData(String dbKey, String tableName) throws Exception;
+
+    public DruidPooledConnection getDruidConnection(String dbKey) throws SQLException;
 
 }

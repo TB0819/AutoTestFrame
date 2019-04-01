@@ -1,5 +1,8 @@
 package com.frame.config;
 
+import com.alibaba.fastjson.JSON;
+import com.frame.annotations.ReadyData;
+import com.frame.annotations.ReadyTestData;
 import com.frame.annotations.TestContextConfiguration;
 import com.frame.datafactory.AutoTestData;
 import com.frame.listeners.ITestListenerHandler;
@@ -12,24 +15,26 @@ import com.frame.util.DBPoolConnection;
 import org.apache.log4j.Logger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Listeners;
+import org.testng.annotations.*;
+
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.*;
 
-//AbstractTransactionalTestNGSpringContextTests 自动回滚
 @ContextConfiguration(locations = { "classpath:spring.xml" })
 @Listeners({ITestListenerHandler.class})
 public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests {
     private static final Logger logger = Logger.getLogger(AbstractTestBase.class);
 
     public static Map<String, String> baseConfig = new HashMap<String, String>();
-    public static Map<String,Map<String, List<Map<String,Object>>>> currentTestReadyDBData = new HashMap<String,Map<String, List<Map<String,Object>>>>();
+    public static Map<String,Map<String,Map<String, List<Map<String,Object>>>>> DbReadyData = new HashMap<>();
     protected DBServer dbServer = new DBServerImp();
     protected HttpService httpService = new HttpServiceImp();
 
+    /**
+     * 启动测试套件之前初始化配置文件
+     * @throws Exception
+     */
     @BeforeSuite(alwaysRun = true)
     protected void beforeSuiteTestContext() throws Exception {
         initConfiguration(getClass());
@@ -38,6 +43,63 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
     @DataProvider(name = "autoDataProvider")
     public Iterator<Object[]> data(Method method) throws Exception {
         return AutoTestData.getTestCaseData(method);
+    }
+
+    // 测试类上注解执行插入数据
+    @BeforeClass
+    public synchronized void beforeClassTestContext() throws Exception {
+        CommonUtil.executeReadyTestDbData(Constants.CLASS_ANNOTATION,Constants.INSERT_DATA,getClass(),null);
+    }
+
+    // 测试类上注解执行删除数据
+    @AfterClass
+    public synchronized void afterClassTestContext() throws Exception {
+        CommonUtil.executeReadyTestDbData(Constants.CLASS_ANNOTATION, Constants.DEL_DATA, getClass(), null);
+    }
+
+    /**
+     * 获取当前线程下的测试准备DB数据
+     * @return
+     */
+    public synchronized static Map<String,Map<String, List<Map<String,Object>>>> getCurrentTestReadyDBData(Class testClass){
+        System.err.println(Thread.currentThread().getId()+ "-  "+ testClass.getCanonicalName() + ":   "+ JSON.toJSONString(DbReadyData.get(testClass.getCanonicalName())));
+        return DbReadyData.get(testClass.getCanonicalName());
+    }
+
+    public synchronized static void clearThreadTestReadyDbData(String testClassName,ReadyTestData readyTestData){
+        if (readyTestData == null ){
+            DbReadyData.get(testClassName).clear();
+        } else{
+            ReadyData[] readyData = readyTestData.datas();
+            for (ReadyData dbData: readyData){
+                String dbKey = dbData.dbName();
+                String tableName = dbData.tableName();
+                DbReadyData.get(testClassName).get(dbKey).get(tableName).clear();
+            }
+        }
+    }
+
+    public synchronized static void addTestReadyDbData(String dbKey,Map<String, List<Map<String,Object>>> tableData, String testClassName, short anntType){
+        //  测试方法注解数据，相同数据库时则putAll表数据，否则put数据库
+        if (!DbReadyData.isEmpty() && DbReadyData.get(testClassName) != null){
+            if(DbReadyData.get(testClassName).containsKey(dbKey)){
+                Iterator iterator = tableData.keySet().iterator();
+                while (iterator.hasNext()) {
+                    String tableName = iterator.next().toString();
+                    if (DbReadyData.get(testClassName).get(dbKey).containsKey(tableName)) {
+                        DbReadyData.get(testClassName).get(dbKey).get(tableName).addAll(tableData.get(tableName));
+                    } else {
+                        DbReadyData.get(testClassName).get(dbKey).put(tableName,tableData.get(tableName));
+                    }
+                }
+            }else {
+                DbReadyData.get(testClassName).put(dbKey,tableData);
+            }
+        }else {
+            Map<String,Map<String, List<Map<String,Object>>>> currentTestReadyDBData = new HashMap<String,Map<String, List<Map<String,Object>>>>();
+            currentTestReadyDBData.put(dbKey,tableData);
+            DbReadyData.put(testClassName,currentTestReadyDBData);
+        }
     }
 
     /**
