@@ -1,10 +1,9 @@
 package com.frame.config;
 
-import com.alibaba.fastjson.JSON;
 import com.frame.annotations.ReadyData;
-import com.frame.annotations.ReadyTestData;
+import com.frame.annotations.TestReadyData;
 import com.frame.annotations.TestContextConfiguration;
-import com.frame.datafactory.AutoTestData;
+import com.frame.casedatafactory.AutoTestData;
 import com.frame.listeners.ITestListenerHandler;
 import com.frame.server.DBServer;
 import com.frame.server.HttpService;
@@ -31,6 +30,7 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
     protected DBServer dbServer = new DBServerImp();
     protected HttpService httpService = new HttpServiceImp();
 
+
     /**
      * 启动测试套件之前初始化配置文件
      * @throws Exception
@@ -45,15 +45,13 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
         return AutoTestData.getTestCaseData(method);
     }
 
-    // 测试类上注解执行插入数据
-    @BeforeClass
-    public synchronized void beforeClassTestContext() throws Exception {
+    @BeforeClass(alwaysRun = true)
+    protected synchronized void beforeTestClass() throws Exception {
         CommonUtil.executeReadyTestDbData(Constants.CLASS_ANNOTATION,Constants.INSERT_DATA,getClass(),null);
     }
 
-    // 测试类上注解执行删除数据
-    @AfterClass
-    public synchronized void afterClassTestContext() throws Exception {
+    @AfterClass(alwaysRun = true)
+    protected synchronized void afterTestClass() throws Exception {
         CommonUtil.executeReadyTestDbData(Constants.CLASS_ANNOTATION, Constants.DEL_DATA, getClass(), null);
     }
 
@@ -62,15 +60,14 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
      * @return
      */
     public synchronized static Map<String,Map<String, List<Map<String,Object>>>> getCurrentTestReadyDBData(Class testClass){
-        System.err.println(Thread.currentThread().getId()+ "-  "+ testClass.getCanonicalName() + ":   "+ JSON.toJSONString(DbReadyData.get(testClass.getCanonicalName())));
         return DbReadyData.get(testClass.getCanonicalName());
     }
 
-    public synchronized static void clearThreadTestReadyDbData(String testClassName,ReadyTestData readyTestData){
-        if (readyTestData == null ){
+    public synchronized static void clearTestReadyDbData(String testClassName, TestReadyData testReadyData){
+        if (testReadyData == null ){
             DbReadyData.get(testClassName).clear();
         } else{
-            ReadyData[] readyData = readyTestData.datas();
+            ReadyData[] readyData = testReadyData.datas();
             for (ReadyData dbData: readyData){
                 String dbKey = dbData.dbName();
                 String tableName = dbData.tableName();

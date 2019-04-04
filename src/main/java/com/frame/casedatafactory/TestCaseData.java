@@ -1,4 +1,4 @@
-package com.frame.datafactory;
+package com.frame.casedatafactory;
 
 import org.apache.log4j.Logger;
 

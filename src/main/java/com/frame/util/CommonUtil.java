@@ -1,7 +1,7 @@
 package com.frame.util;
 
 import com.frame.annotations.ReadyData;
-import com.frame.annotations.ReadyTestData;
+import com.frame.annotations.TestReadyData;
 import com.frame.config.AbstractTestBase;
 import com.frame.config.Constants;
 import com.frame.server.DBServer;
@@ -39,24 +39,24 @@ public class CommonUtil {
      * @param method            测试方法
      */
     public static void executeReadyTestDbData(short annotationType, short optType ,Class clazz, Method method) throws Exception {
-        ReadyTestData readyTestData = null;
+        TestReadyData testReadyData = null;
         ReadyData[] readyDataArray = null;
         // 获取注解数据
         if (Constants.CLASS_ANNOTATION == annotationType){
-            if (clazz.isAnnotationPresent(ReadyTestData.class)){
-                readyTestData = (ReadyTestData) clazz.getAnnotation(ReadyTestData.class);
-                readyDataArray = readyTestData.datas();
+            if (clazz.isAnnotationPresent(TestReadyData.class)){
+                testReadyData = (TestReadyData) clazz.getAnnotation(TestReadyData.class);
+                readyDataArray = testReadyData.datas();
             }
         } else if (Constants.METHOD_ANNOTATION == annotationType){
-            if (method.isAnnotationPresent(ReadyTestData.class)){
-                readyTestData = method.getAnnotation(ReadyTestData.class);
-                readyDataArray = readyTestData.datas();
+            if (method.isAnnotationPresent(TestReadyData.class)){
+                testReadyData = method.getAnnotation(TestReadyData.class);
+                readyDataArray = testReadyData.datas();
             }
         } else {
             throw new Exception("注解类型错误!");
         }
 
-        if (readyTestData == null) {
+        if (testReadyData == null) {
             return;
         }
         DBServer dbServer = new DBServerImp();
@@ -74,9 +74,9 @@ public class CommonUtil {
             } else if (Constants.DEL_DATA == optType) {
                 dbServer.deleteFromFile(dbKey,filePath,tableName,null);
                 if (Constants.CLASS_ANNOTATION == annotationType){
-                    AbstractTestBase.clearThreadTestReadyDbData(clazz.getCanonicalName(),null);
+                    AbstractTestBase.clearTestReadyDbData(clazz.getCanonicalName(),null);
                 } else {
-                    AbstractTestBase.clearThreadTestReadyDbData(clazz.getCanonicalName(),readyTestData);
+                    AbstractTestBase.clearTestReadyDbData(clazz.getCanonicalName(), testReadyData);
                 }
             } else {
                 throw new Exception("DB操作类型错误!");

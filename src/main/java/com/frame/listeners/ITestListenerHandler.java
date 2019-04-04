@@ -1,7 +1,7 @@
 package com.frame.listeners;
 
 import com.frame.annotations.CaseSource;
-import com.frame.annotations.ReadyTestData;
+import com.frame.annotations.TestReadyData;
 import com.frame.config.AbstractTestBase;
 import com.frame.config.Constants;
 import com.frame.util.CommonUtil;
@@ -26,7 +26,7 @@ public class ITestListenerHandler implements ITestListener, IInvokedMethodListen
         Class currentTestClass = iTestResult.getTestClass().getRealClass();
         boolean flag = false;
         Test testAnnotation = method.getAnnotation(Test.class);
-        ReadyTestData readyTestData = method.getAnnotation(ReadyTestData.class);
+        TestReadyData testReadyData = method.getAnnotation(TestReadyData.class);
         try {
             if (method.isAnnotationPresent(CaseSource.class)) {
                 CaseSource caseSource = method.getAnnotation(CaseSource.class);
@@ -34,12 +34,12 @@ public class ITestListenerHandler implements ITestListener, IInvokedMethodListen
                 int currentCount = iTestResult.getMethod().getCurrentInvocationCount();
                 int testInvocationCount = testAnnotation.invocationCount();
                 if (currentCount == (caseCount * testInvocationCount) || caseCount == -1){
-                    AbstractTestBase.clearThreadTestReadyDbData(currentTestClass.getCanonicalName(),readyTestData);
+                    AbstractTestBase.clearTestReadyDbData(currentTestClass.getCanonicalName(), testReadyData);
                     flag = true;
                     CommonUtil.executeReadyTestDbData(Constants.METHOD_ANNOTATION,Constants.DEL_DATA,currentTestClass,method);
                 }
             }else {
-                if (method.isAnnotationPresent(ReadyTestData.class)){
+                if (method.isAnnotationPresent(TestReadyData.class)){
                     flag = true;
                     CommonUtil.executeReadyTestDbData(Constants.METHOD_ANNOTATION,Constants.DEL_DATA,currentTestClass,method);
                 }
@@ -48,7 +48,7 @@ public class ITestListenerHandler implements ITestListener, IInvokedMethodListen
             Assert.fail("准备数据清理失败",e);
         }finally {
             if (flag && !AbstractTestBase.DbReadyData.get(currentTestClass.getCanonicalName()).isEmpty()){
-                AbstractTestBase.clearThreadTestReadyDbData(currentTestClass.getCanonicalName(),readyTestData);
+                AbstractTestBase.clearTestReadyDbData(currentTestClass.getCanonicalName(), testReadyData);
             }
         }
     }

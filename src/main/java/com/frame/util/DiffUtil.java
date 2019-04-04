@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * 对比结果工具类
  */
-public class DiffResultUtil {
+public class DiffUtil {
     /**
      * 修改、删除操作后的db数据全字段对比，根据准备数据和预期结果json组合与实际结果对比
      * @param expectJson        预期结果字段json

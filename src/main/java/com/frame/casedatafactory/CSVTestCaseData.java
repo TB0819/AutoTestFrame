@@ -1,4 +1,4 @@
-package com.frame.datafactory;
+package com.frame.casedatafactory;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.log4j.Logger;

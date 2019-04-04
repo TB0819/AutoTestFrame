@@ -1,4 +1,4 @@
-package com.frame.datafactory;
+package com.frame.casedatafactory;
 
 import com.frame.annotations.CaseSource;
 import com.frame.config.Constants;
