@@ -65,6 +65,9 @@ public abstract class AbstractTestBase extends AbstractTestNGSpringContextTests 
 
     public synchronized static void clearTestReadyDbData(String testClassName, TestReadyData testReadyData){
         if (testReadyData == null ){
+            if (DbReadyData.get(testClassName) == null || DbReadyData.get(testClassName).isEmpty()){
+                return;
+            }
             DbReadyData.get(testClassName).clear();
         } else{
             ReadyData[] readyData = testReadyData.datas();
