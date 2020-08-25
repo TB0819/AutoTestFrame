@@ -47,7 +47,7 @@ public class ITestListenerHandler implements ITestListener, IInvokedMethodListen
         }catch (Exception e){
             Assert.fail("准备数据清理失败",e);
         }finally {
-            if (flag && !AbstractTestBase.DbReadyData.get(currentTestClass.getCanonicalName()).isEmpty()){
+            if (flag && AbstractTestBase.DbReadyData.get(currentTestClass.getCanonicalName()) != null && !AbstractTestBase.DbReadyData.get(currentTestClass.getCanonicalName()).isEmpty()){
                 AbstractTestBase.clearTestReadyDbData(currentTestClass.getCanonicalName(), testReadyData);
             }
         }
