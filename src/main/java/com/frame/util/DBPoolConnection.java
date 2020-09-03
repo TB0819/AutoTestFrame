@@ -38,7 +38,7 @@ public class DBPoolConnection {
      */
      public void createDruidPooledConnection(Map<String, String> configMap){
         for (Map.Entry entry: configMap.entrySet()) {
-            String value = entry.getValue().toString().toLowerCase();
+            String value = String.valueOf(entry.getValue());
             /* mysql连接 */
             if (value.startsWith("jdbc:mysql:")){
                 createMysqlConnection(String.valueOf(entry.getKey()), value);
