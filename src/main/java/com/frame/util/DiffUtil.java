@@ -12,6 +12,99 @@ import java.util.Map;
  * 对比结果工具类
  */
 public class DiffUtil {
+    //TODO 1:预期值可以比实际值对象少 2：忽略数组顺序 3：预期数组可比实际数组的数量少
+    public static String diffJson(String expectedJsonStr, String actualJsonStr) throws Exception {
+        if (expectedJsonStr == null) {
+            throw new Exception("Expected string is null");
+        }else if (actualJsonStr == null) {
+            throw new Exception("actual string is null");
+        } else if (expectedJsonStr.equals(actualJsonStr)) {
+            return "预期值和实际值匹配正确";
+        }
+
+        Object expected = JSON.parse(expectedJsonStr);
+        Object actual = JSON.parse(actualJsonStr);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        compareJSON("", expected, actual, result);
+        return JSONObject.toJSONString(result);
+    }
+
+    public static String compareJSON(JSONObject expected, JSONObject actual) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        compareJSON("", expected, actual, result);
+        return JSONObject.toJSONString(result);
+    }
+
+    public static String compareJSON(JSONArray expected, JSONArray actual) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        compareJSON("", expected, actual, result);
+        return JSONObject.toJSONString(result);
+    }
+
+    private static void compareJSON(String prefix, Object expected, Object actual, List<Map<String, Object>> result) {
+        if ((expected instanceof JSONObject) && (actual instanceof JSONObject)) {
+            compareJSONObject(prefix, (JSONObject) expected, (JSONObject) actual, result);
+        } else if ((expected instanceof JSONArray) && (actual instanceof JSONArray)) {
+            compareJSONArray(prefix, (JSONArray) expected, (JSONArray) actual, result);
+        } else {
+            compareValue(prefix, expected, actual, result);
+        }
+    }
+
+    /**
+     * JSONObject的具体值对比
+     * @param expectedValue
+     * @param actualValue
+     */
+    private static void compareValue(String prefix, Object expectedValue, Object actualValue, List<Map<String, Object>> result) {
+        if (expectedValue == null && actualValue == null) {
+            return ;
+        } else if (expectedValue != null && expectedValue.equals(actualValue)) {
+            return ;
+        }
+        addError(result, prefix, "equals", expectedValue, actualValue);
+    }
+
+    private static void compareJSONArray(String prefix, JSONArray expected, JSONArray actual, List<Map<String, Object>> result) {
+        // 预期或实际值某个为空时，结果则为错误
+        if ((expected.size() < 1 || actual.size() < 1) && expected.size() != actual.size()) {
+            addError(result, prefix, "equals", expected, actual);
+            return;
+        }
+        for (int i = 0; i < expected.size(); i++) {
+            String arrayPrefix = String.format("[%d]", i);
+            compareJSON(qualify(prefix, arrayPrefix), expected.get(i), actual.get(i), result);
+        }
+    }
+
+    private static void compareJSONObject(String prefix, JSONObject expected, JSONObject actual, List<Map<String, Object>> result) {
+        Set<String> expectedKeys = expected.keySet();
+        for (String key : expectedKeys) {
+            if (!actual.containsKey(key)) {
+                addError(result, qualify(prefix, key), "missing", expected.get(key), actual.get(key));
+                continue;
+            }
+            compareJSON(qualify(prefix, key), expected.get(key), actual.get(key), result);
+        }
+    }
+
+    private static String qualify(String prefix, String key) {
+        return "".equals(prefix) ? key : prefix + "." + key;
+    }
+
+    private static void addError(List<Map<String, Object>> result, String field, String type, Object expected, Object actual) {
+        if (result == null) {
+            return;
+        }
+        Map<String, Object> errResult = new HashMap<>();
+        errResult.put("field", field);
+        errResult.put("type", type);
+        errResult.put("Expected", expected);
+        errResult.put("Actual", actual);
+        result.add(errResult);
+    }
+    
     /**
      * 修改、删除操作后的db数据全字段对比，根据准备数据和预期结果json组合与实际结果对比
      * @param expectJson        预期结果字段json
