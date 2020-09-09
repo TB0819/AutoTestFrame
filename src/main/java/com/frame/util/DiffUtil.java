@@ -12,31 +12,66 @@ import java.util.Map;
  * 对比结果工具类
  */
 public class DiffUtil {
-    //TODO 1:预期值可以比实际值对象少 2：忽略数组顺序 3：预期数组可比实际数组的数量少
     public static String diffJson(String expectedJsonStr, String actualJsonStr) throws Exception {
+        return diffJson(expectedJsonStr, actualJsonStr, null, null, null);
+    }
+
+    public static String diffJson(String expectedJsonStr, String actualJsonStr, String extractJsonPath) throws Exception {
+        return diffJson(expectedJsonStr, actualJsonStr, extractJsonPath, null, null);
+    }
+
+    public static String diffJson(String expectedJsonStr, String actualJsonStr, List<String> excludeJsonPaths) throws Exception {
+        return diffJson(expectedJsonStr, actualJsonStr, null, null, excludeJsonPaths);
+    }
+
+    public static String diffJson(String expectedJsonStr, String actualJsonStr, String extractJsonPath, List<String> excludeFields, List<String> excludeJsonPaths) throws Exception {
         if (expectedJsonStr == null) {
             throw new Exception("Expected string is null");
         }else if (actualJsonStr == null) {
-            throw new Exception("actual string is null");
+            throw new Exception("Actual string is null");
         } else if (expectedJsonStr.equals(actualJsonStr)) {
             return "预期值和实际值匹配正确";
         }
-
         Object expected = JSON.parse(expectedJsonStr);
         Object actual = JSON.parse(actualJsonStr);
 
+        //  根据JsonPath提取指定的对比内容
+        if (extractJsonPath != null && !extractJsonPath.isEmpty()) {
+            //  根据JsonPath获取的内容进行对比
+            if (!JSONPath.contains(expected,extractJsonPath)) {
+                throw new Exception(String.format("Expected string not found jsonPath: %s", extractJsonPath));
+            } else if (!JSONPath.contains(actual,extractJsonPath)) {
+                throw new Exception(String.format("Actual string not found jsonPath: %s", extractJsonPath));
+            }
+            expected = JSONPath.eval(expected, extractJsonPath);
+            actual = JSONPath.eval(actual, extractJsonPath);
+        }
+
+        //  移除符合JsonPath的属性
+        if (excludeJsonPaths != null && !excludeJsonPaths.isEmpty()) {
+            for (String path : excludeJsonPaths) {
+                JSONPath.remove(expected, path);
+                JSONPath.remove(actual, path);
+            }
+        }
+        //  移除符合的字段属性
+        if (excludeFields != null && !excludeFields.isEmpty()){
+            removeField(expected, excludeFields);
+            removeField(actual, excludeFields);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        compareJSON("", expected, actual, result);
+        return JSONObject.toJSONString(result, SerializerFeature.WriteMapNullValue);
+    }
+
+    public static String diffJson(JSONObject expected, JSONObject actual) {
         List<Map<String, Object>> result = new ArrayList<>();
         compareJSON("", expected, actual, result);
         return JSONObject.toJSONString(result);
     }
 
-    public static String compareJSON(JSONObject expected, JSONObject actual) {
-        List<Map<String, Object>> result = new ArrayList<>();
-        compareJSON("", expected, actual, result);
-        return JSONObject.toJSONString(result);
-    }
-
-    public static String compareJSON(JSONArray expected, JSONArray actual) {
+    public static String diffJson(JSONArray expected, JSONArray actual) {
         List<Map<String, Object>> result = new ArrayList<>();
         compareJSON("", expected, actual, result);
         return JSONObject.toJSONString(result);
@@ -52,11 +87,6 @@ public class DiffUtil {
         }
     }
 
-    /**
-     * JSONObject的具体值对比
-     * @param expectedValue
-     * @param actualValue
-     */
     private static void compareValue(String prefix, Object expectedValue, Object actualValue, List<Map<String, Object>> result) {
         if (expectedValue == null && actualValue == null) {
             return ;
@@ -81,6 +111,7 @@ public class DiffUtil {
     private static void compareJSONObject(String prefix, JSONObject expected, JSONObject actual, List<Map<String, Object>> result) {
         Set<String> expectedKeys = expected.keySet();
         for (String key : expectedKeys) {
+            //  预期的key在实际对象中不存在
             if (!actual.containsKey(key)) {
                 addError(result, qualify(prefix, key), "missing", expected.get(key), actual.get(key));
                 continue;
@@ -103,6 +134,24 @@ public class DiffUtil {
         errResult.put("Expected", expected);
         errResult.put("Actual", actual);
         result.add(errResult);
+    }
+
+    public static void removeField(Object json, List<String> fields) {
+        if (json instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) json;
+            for (int i=0; i< jsonArray.size(); i++) {
+                removeField(jsonArray.get(i), fields);
+            }
+        } else if (json instanceof JSONObject) {
+            JSONObject jsonObject = (JSONObject) json;
+            for (String field : fields) {
+                jsonObject.remove(field);
+            }
+            Set<String> keys = jsonObject.keySet();
+            for (String key: keys) {
+                removeField(jsonObject.get(key), fields);
+            }
+        }
     }
     
     /**
