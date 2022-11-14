@@ -11,7 +11,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testng-version>6.11</testng-version>
-        <spring.version>4.2.6.RELEASE</spring.version>
+        <spring.version>4.2.7.RELEASE</spring.version>
         <mysql-version>5.1.34</mysql-version>
         <httpclient-version>4.5.2</httpclient-version>
         <httpclient-core-version>4.4.4</httpclient-core-version>
